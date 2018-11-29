@@ -6,6 +6,7 @@ public class PacketController
     public int maxSize = 0;
     public boolean hasHeader = false;
     public boolean isFinished = false;
+    public String filename ="";
 
     public int getSize()
     {
@@ -46,4 +47,8 @@ public class PacketController
     {
         return this.isFinished;
     }
+
+    public String getFileName(){ return this.filename; }
+
+    public void setFileName(String newfilename){ this.filename = newfilename; }
 }
