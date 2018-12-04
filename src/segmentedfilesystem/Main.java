@@ -11,8 +11,6 @@ public class Main
     private static InetAddress server;
     private static int port = 6014;
 
-    public static ArrayList<Byte> bigStorage = new ArrayList<Byte>();
-
     public static PacketController File1 = new PacketController();
     public static PacketController File2 = new PacketController();
     public static PacketController File3 = new PacketController();
@@ -25,6 +23,13 @@ public class Main
         server = InetAddress.getByName("heartofgold.morris.umn.edu");
 
         socket = new DatagramSocket();
+
+        byte[][] storage = new byte[0][0];
+
+        // 1_XX -> 00101010010100
+        // [key]
+        // 1 = File, so either 1, 2, or 3
+        // XX = packet nunber
 
         byte[] buff = new byte[0];
         DatagramPacket helloPacket = new DatagramPacket(buff, buff.length, server, port);
@@ -68,16 +73,19 @@ public class Main
                             case 1:
 
                                 File1.setFileName(ReadHeaderFilename(bufferPacket, bigPacket.getLength()));
+                                File1.setHasHeader(true);
                                 break;
 
                             case 2:
 
                                 File2.setFileName(ReadHeaderFilename(bufferPacket, bigPacket.getLength()));
+                                File2.setHasHeader(true);
                                 break;
 
                             case 3:
 
                                 File3.setFileName(ReadHeaderFilename(bufferPacket, bigPacket.getLength()));
+                                File3.setHasHeader(true);
                                 break;
                         }
 
@@ -96,22 +104,22 @@ public class Main
                         // bufferPacket[6] = data
                         // etc..
 
-                        System.out.println(bufferPacket[2] + " " + bufferPacket[3]);
+                        int PacketNumber = MakePacketNumber(bufferPacket[2], bufferPacket[3]);
+                        System.out.println("Got a data packet " + fileMap.get((int)bufferPacket[1]));
 
                         switch(fileMap.get((int)bufferPacket[1]))
                         {
                             //Belongs to File1
                             case 1:
-                                for(int i = 0; i < bigPacket.getLength(); i++)
-                                {
-
-                                }
+                                File1.AddElement(PacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
                                 break;
 
                             case 2:
+                                File2.AddElement(PacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
                                 break;
 
                             case 3:
+                                File3.AddElement(PacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
                                 break;
                         }
 
@@ -130,6 +138,30 @@ public class Main
                         // bufferPacket[6] = data
                         // etc..
 
+                        int LastPacketNumber = MakePacketNumber(bufferPacket[2], bufferPacket[3]);
+                        System.out.println("Got final packet");
+
+                        switch(fileMap.get((int)bufferPacket[1]))
+                        {
+
+                            //Belongs to File1
+                            case 1:
+                                File1.setMaxSize(LastPacketNumber);
+                                File1.AddElement(LastPacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
+                                break;
+
+                            case 2:
+                                File2.setMaxSize(LastPacketNumber);
+                                File2.AddElement(LastPacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
+                                break;
+
+                            case 3:
+                                File3.setMaxSize(LastPacketNumber);
+                                File3.AddElement(LastPacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
+                                break;
+                        }
+
+
                         break;
                 }
 
@@ -140,6 +172,8 @@ public class Main
             }
         }
 
+        System.out.println("Read to process files");
+
     }
 
     public static void HashLogic(byte bufferPacket)
@@ -148,7 +182,7 @@ public class Main
         if(!fileMap.containsKey(bufferPacket))
         {
             //Add a new entry to the next spot in the HashMap
-            fileMap.put((int)bufferPacket, fileMap.size() + 1);
+            fileMap.put((int)bufferPacket, fileMap.size());
         }
     }
 
@@ -161,12 +195,41 @@ public class Main
             name += (char)charByte;
         }
 
+        System.out.println(name);
         return name;
     }
 
-    public static void ReadDataPacket(byte[] bufferPacket)
+    public static byte[] ReadDataPacket(byte[] bufferPacket, int length)
     {
+        byte[] data = new byte[length - 4];
+        for(int i = 0; i < length - 4; i++)
+        {
+            byte dataByte = bufferPacket[i + 4];
+            data[i] = dataByte;
+        }
 
+        return data;
+    }
+
+    public static int MakePacketNumber(byte LOB, byte HOB) {
+
+        int iLOB = (int)LOB;
+        int iHOB = (int)HOB;
+
+        if (iLOB < 0)
+        {
+            iLOB = iLOB + 256;
+        }
+
+        if(iHOB < 0)
+        {
+            iHOB = iHOB + 256;
+        }
+
+        int result = 256 * iLOB + iHOB;
+
+        //System.out.println(result + " packet");
+        return result;
     }
 
 }
