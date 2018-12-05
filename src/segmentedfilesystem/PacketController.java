@@ -1,32 +1,15 @@
 package segmentedfilesystem;
 
+import java.util.ArrayList;
+
 public class PacketController
 {
-    public int size = 0;
+    private int size = 0;
     public int maxSize = 0;
     public boolean hasHeader = false;
     public boolean isFinished = false;
     public String filename ="";
-
-    public int getSize()
-    {
-        return size;
-    }
-
-    public void setSize(int newMaxSize)
-    {
-        this.size += newMaxSize;
-
-        if(this.size > 0 && this.size == this.maxSize)
-        {
-            this.isFinished = true;
-        }
-    }
-
-    public int getMaxSize()
-    {
-        return maxSize;
-    }
+    public ArrayList<byte[]> storage = new ArrayList<>();
 
     public void setMaxSize(int newMaxSize)
     {
@@ -48,7 +31,38 @@ public class PacketController
         return this.isFinished;
     }
 
-    public String getFileName(){ return this.filename; }
+    public String getFileName()
+    {
+        return this.filename;
+    }
 
-    public void setFileName(String newfilename){ this.filename = newfilename; }
+    public void setFileName(String newfilename)
+    {
+        this.filename = newfilename;
+    }
+
+    public void AddElement(int position, byte[] data)
+    {
+        ensureSize(storage, position + 1);
+
+        storage.set(position, data);
+        size++;
+
+        //System.out.println("File " + size + " out of " + maxSize);
+
+        if(size == maxSize && maxSize != 0 && getHeader())
+        {
+            isFinished = true;
+        }
+    }
+
+    public void ensureSize(ArrayList<byte[]> list, int size)
+    {
+        // Prevent excessive copying while we're adding
+        list.ensureCapacity(size);
+        while (list.size() < size)
+        {
+            list.add(null);
+        }
+    }
 }
