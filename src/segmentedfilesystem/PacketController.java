@@ -46,11 +46,11 @@ public class PacketController
         ensureSize(storage, position + 1);
 
         storage.set(position, data);
+
         size++;
+        System.out.println("File " + getFileName() + " " + size + " out of " + maxSize);
 
-        //System.out.println("File " + size + " out of " + maxSize);
-
-        if(size == maxSize && maxSize != 0 && getHeader())
+        if(maxSize > 0 && size == maxSize && getHeader())
         {
             isFinished = true;
         }

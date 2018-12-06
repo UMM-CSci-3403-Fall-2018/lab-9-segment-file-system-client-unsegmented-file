@@ -26,11 +26,6 @@ public class Main
 
         byte[][] storage = new byte[0][0];
 
-        // 1_XX -> 00101010010100
-        // [key]
-        // 1 = File, so either 1, 2, or 3
-        // XX = packet nunber
-
         byte[] buff = new byte[0];
         DatagramPacket helloPacket = new DatagramPacket(buff, buff.length, server, port);
 
@@ -41,9 +36,8 @@ public class Main
 
         //Need to keep requesting packets until we have all of them
 
-        while(!File1.getIsFinished() && !File2.getIsFinished() && !File3.getIsFinished())
+        while(!File1.getIsFinished() || !File2.getIsFinished() || !File3.getIsFinished())
         {
-
             try
             {
                 //Request a packet
@@ -105,7 +99,6 @@ public class Main
                         // etc..
 
                         int PacketNumber = MakePacketNumber(bufferPacket[2], bufferPacket[3]);
-                        System.out.println("Got a data packet " + fileMap.get((int)bufferPacket[1]));
 
                         switch(fileMap.get((int)bufferPacket[1]))
                         {
@@ -139,24 +132,26 @@ public class Main
                         // etc..
 
                         int LastPacketNumber = MakePacketNumber(bufferPacket[2], bufferPacket[3]);
-                        System.out.println("Got final packet");
 
                         switch(fileMap.get((int)bufferPacket[1]))
                         {
 
                             //Belongs to File1
                             case 1:
-                                File1.setMaxSize(LastPacketNumber);
+                                System.out.println("Got File1 last packet");
+                                File1.setMaxSize(LastPacketNumber + 1);
                                 File1.AddElement(LastPacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
                                 break;
 
                             case 2:
-                                File2.setMaxSize(LastPacketNumber);
+                                System.out.println("Got File2 last packet");
+                                File2.setMaxSize(LastPacketNumber + 1);
                                 File2.AddElement(LastPacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
                                 break;
 
                             case 3:
-                                File3.setMaxSize(LastPacketNumber);
+                                System.out.println("Got File3 last packet");
+                                File3.setMaxSize(LastPacketNumber + 1);
                                 File3.AddElement(LastPacketNumber, ReadDataPacket(bufferPacket, bigPacket.getLength()));
                                 break;
                         }
@@ -164,6 +159,8 @@ public class Main
 
                         break;
                 }
+
+                //System.out.println(File1.getIsFinished() + " " + File2.getIsFinished() + " " + File3.getIsFinished());
 
             }
             catch(IOException e)
@@ -173,16 +170,17 @@ public class Main
         }
 
         System.out.println("Read to process files");
+        //Make a File.BuildContents method
 
     }
 
     public static void HashLogic(byte bufferPacket)
     {
         //If the file ID is not in the HashMap, add it
-        if(!fileMap.containsKey(bufferPacket))
+        if(!fileMap.containsKey((int)bufferPacket))
         {
             //Add a new entry to the next spot in the HashMap
-            fileMap.put((int)bufferPacket, fileMap.size());
+            fileMap.put((int)bufferPacket, fileMap.size() + 1);
         }
     }
 
