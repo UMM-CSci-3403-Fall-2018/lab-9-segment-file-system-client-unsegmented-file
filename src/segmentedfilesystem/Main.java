@@ -45,7 +45,7 @@ public class Main
                 socket.receive(bigPacket);
 
                 //If the file ID is not in the HashMap, add it
-                HashLogic(bufferPacket[1]);
+                HashLogic(bufferPacket[1], fileMap);
 
                 //Determine what type of packet we get from the server
                 switch(bufferPacket[0])
@@ -193,7 +193,7 @@ public class Main
 
     }
 
-    public static void HashLogic(byte bufferPacket)
+    public static void HashLogic(byte bufferPacket, HashMap fileMap)
     {
         //If the file ID is not in the HashMap, add it
         if(!fileMap.containsKey((int)bufferPacket))
